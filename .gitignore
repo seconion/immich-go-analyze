@@ -1,0 +1,15 @@
+# Environment variables
+.env
+
+# Binary
+main
+
+# IDEs
+.idea
+.vscode
+.DS_Store
+
+# Temporary files
+test_image.png
+test_image_converted.png
+*.log
