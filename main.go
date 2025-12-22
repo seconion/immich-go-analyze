@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -251,6 +252,7 @@ func runNormal() {
 		}
 
 		count := 0
+		batchSuccess := 0
 		for _, assetID := range assetIDs {
 			count++
 			totalProcessed++
@@ -258,7 +260,11 @@ func runNormal() {
 
 			imgBytes, err := downloadThumbnail(assetID)
 			if err != nil {
-				fmt.Printf("\n   [SKIP] Download error: %v\n", err)
+				if strings.Contains(err.Error(), "status 404") {
+					fmt.Printf("\n   [SKIP] Thumbnail not ready\n")
+				} else {
+					fmt.Printf("\n   [SKIP] Download error: %v\n", err)
+				}
 				continue
 			}
 
@@ -288,6 +294,13 @@ func runNormal() {
 			} else {
 				fmt.Printf("Done! (%d chars)\n", len(desc))
 			}
+			batchSuccess++
+		}
+
+		// If we found images but processed none (e.g. all 404), sleep to avoid hammering
+		if len(assetIDs) > 0 && batchSuccess == 0 {
+			fmt.Println("Batch failed (waiting for thumbnails). Sleeping 30s...")
+			time.Sleep(30 * time.Second)
 		}
 	}
 }
