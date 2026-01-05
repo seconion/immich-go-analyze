@@ -54,6 +54,8 @@ See the tool in action:
 
 ## Configuration
 
+### Environment Variables
+
 1.  Create a `.env` file in the same directory as the binary/source code.
 2.  Copy the example content:
     ```bash
@@ -69,6 +71,30 @@ See the tool in action:
     DB_NAME=immich
     WATCH_INTERVAL=1m
     ```
+
+### Exposing the Database Port
+
+By default, the Immich PostgreSQL database is **not exposed** outside the Docker network. To allow this tool to connect, you need to expose port 5432 in your Immich `docker-compose.yml`:
+
+1.  Locate your Immich docker-compose file (commonly at `homelab/stacks/immich-app/docker-compose.yml` or similar).
+2.  Add the `ports` section to the `database` service:
+    ```yaml
+    database:
+      container_name: immich_postgres
+      image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:...
+      ports:
+        - 5432:5432
+      environment:
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_USER: ${DB_USERNAME}
+        POSTGRES_DB: ${DB_DATABASE_NAME}
+    ```
+3.  Restart the Immich stack:
+    ```bash
+    docker compose down && docker compose up -d
+    ```
+
+**Security Note:** Only expose the database port if you trust your local network. For remote access, consider using SSH tunneling or VPN instead of exposing the port publicly.
 
 ## Usage
 
